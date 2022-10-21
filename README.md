@@ -49,6 +49,7 @@ The tool will run for a minute or two. It will generate report in `/var/tmp/yfi_
 - 0_archive_username_timestamp.zip
 - 0_summary_username_timestamp.txt
 - 1_logs_timestamp.log
+- 1_markdown_timestamp.md
 - 1_report_timestamp.json
 - 2_diag_*.txt
 - 3_test_*.txt
