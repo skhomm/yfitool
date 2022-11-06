@@ -31,7 +31,7 @@ from sys import argv
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.5.0"
+VERSION = "1.5.1"
 FOLDER_NAME = '/var/tmp/yfi_reports'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
 
@@ -663,6 +663,7 @@ def get_diagnostics(task, subfolder_name='.'):
     _, task_output = run_subprocess(command_to_execute)
 
     with open(f'{subfolder_name}/{filename}', 'w', encoding='utf-8') as file:
+        file.write(f"Executed command: {command_to_execute}\n\n")
         for line in task_output:
             file.write(line)
 
