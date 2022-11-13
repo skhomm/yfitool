@@ -31,7 +31,7 @@ from sys import argv
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.5.1"
+VERSION = "1.5.2"
 FOLDER_NAME = '/var/tmp/yfi_reports'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
 
@@ -717,6 +717,38 @@ def execute_test(test, subfolder_name='.'):
     return test_results
 
 
+def measure_throughput(subfolder_name='.'):
+    timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
+    filename = f"4_throughput_{timestamp}.txt"
+    command_to_execute = 'networkQuality'
+
+    print("Measuring throughput...")
+    _, task_output = run_subprocess(command_to_execute)
+
+    expressions = [
+        r'Upload capacity: .+',
+        r'Download capacity: .+',
+        r'Responsiveness: .+',
+    ]
+
+    with open(f'{subfolder_name}/{filename}', 'w', encoding='utf-8') as file:
+        file.write(f"Executed command: {command_to_execute}\n")
+        for line in task_output:
+            file.write(line)
+
+    search_results = []
+    for expression in expressions:
+        search_results.extend(re.findall(expression, task_output))
+    search_results = ('\n'.join(search_results))
+
+    throughput_results = {
+        'command': command_to_execute,
+        'major_facts': search_results
+    }
+
+    return throughput_results
+
+
 def parse_report(start_time, report, subfolder_name='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename_summary = f"0_summary_{timestamp}.txt"
@@ -747,6 +779,10 @@ def parse_report(start_time, report, subfolder_name='.'):
     summary.append("\n\n====Tcpdump====\n")
     summary.append(f"Filter: {SETTINGS['tcpdump_output_filter']}\n")
     summary.append(report['tcpdump']['result'])
+
+    if report['throughput']['major_facts']:
+        summary.append("\n\n====Throughput====\n")
+        summary.append(report['throughput']['major_facts'])
 
     # Prepare highlights from the summary
     for _, value in HIGHLIGHTS_TEMPLATE.items():
@@ -1196,7 +1232,7 @@ def read_config():
 
 
 def main():
-    report = {'conflicts': {}, 'diags': {}, 'tests': {}, 'tcpdump': ''}
+    report = {'conflicts': {}, 'diags': {}, 'tests': {}, 'tcpdump': '', 'throughput': ''}
     start_time = datetime.now()
 
     # Create folders, start logs, check capabilities, look for conflicts
@@ -1216,6 +1252,9 @@ def main():
 
     # Terminate the tcpdump and parse the output .pcap file to form a report
     report['tcpdump'] = tcpdump_finish(dump, tcpdump_filename, start_time, conflicts)
+
+    # Try to measure throughput if OS has a right tool
+    report['throughput'] = measure_throughput(subfolder_name)
 
     # Save the <report> as .json file
     make_json(report, subfolder_name)
