@@ -360,6 +360,16 @@ def set_constants(adapter_name):
             'expressions': r'ff02::1: ICMP6, router advertisement',
             'description': 'RA messages received:',
         },
+        'dl_throughput': {
+            'id': 'dl_throughput',
+            'expressions': r'Download capacity: (\S+ \S+)',
+            'description': 'DL throughput:',
+        },
+        'ul_throughput': {
+            'id': 'ul_throughput',
+            'expressions': r'Upload capacity: (\S+ \S+)',
+            'description': 'UL throughput:',
+        },
         'ssid': {
             'id': 'ssid',
             'expressions': r' SSID: (\S+)',
