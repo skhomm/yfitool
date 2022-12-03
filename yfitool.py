@@ -748,7 +748,6 @@ def measure_throughput(subfolder_name='.'):
     logging.info(f"Starting troughput measurement: {command_to_execute}")
     if not command_to_execute:
         logging.warning(f"Measuring throughput is not supported, no command to execute")
-        print("Measuring throughput is not supported")
         throughput_results = {
             'command': command_to_execute,
             'major_facts': "Measuring throughput is not supported"
@@ -911,13 +910,17 @@ def gather_highlights(data, template):
         else:
             highlights = ("! No RA messages captured")
     elif template['id'] == 'dl_throughput':
-        if search_results:
+        if not SETTINGS['throughput_command']:
+            highlights = ""
+        elif search_results:
             output = ' '.join(search_results)
             highlights = (f"{template['description']} {output}")
         else:
             highlights = ("! DL troughput: error or not supported")
     elif template['id'] == 'ul_throughput':
-        if search_results:
+        if not SETTINGS['throughput_command']:
+            highlights = ""
+        elif search_results:
             output = ' '.join(search_results)
             highlights = (f"{template['description']} {output}")
         else:
