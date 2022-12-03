@@ -31,7 +31,7 @@ from sys import argv
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.5.1"
+VERSION = "1.5.2"
 FOLDER_NAME = '/var/tmp/yfi_reports'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
 
@@ -116,6 +116,8 @@ def set_constants(adapter_name):
         'tcpdump_check_capabilities': f'tcpdump -i {adapter_name} -c 1',
         'tcpdump_timeout': 30,
         'tcpdump_output_filter': 'icmp6 && ip6[40] == 134',
+
+        'throughput_command': 'networkQuality',
     }
 
     settings['linux'] = {
@@ -136,6 +138,8 @@ def set_constants(adapter_name):
         'tcpdump_check_capabilities': f'tcpdump -i {adapter_name} -c 1',
         'tcpdump_timeout': 30,
         'tcpdump_output_filter': 'icmp6 && ip6[40] == 134',
+
+        'throughput_command': None, # Not supported yet
     }
 
     # DIAGNOSTICS are constants used by get_diagnostics() function
@@ -360,6 +364,16 @@ def set_constants(adapter_name):
             'expressions': r'ff02::1: ICMP6, router advertisement',
             'description': 'RA messages received:',
         },
+        'dl_throughput': {
+            'id': 'dl_throughput',
+            'expressions': r'Download capacity: (\S+ \S+)',
+            'description': 'DL throughput:',
+        },
+        'ul_throughput': {
+            'id': 'ul_throughput',
+            'expressions': r'Upload capacity: (\S+ \S+)',
+            'description': 'UL throughput:',
+        },
         'ssid': {
             'id': 'ssid',
             'expressions': r' SSID: (\S+)',
@@ -443,6 +457,18 @@ def set_constants(adapter_name):
             'id': 'ra_received',
             'expressions': r'ip6-allnodes: ICMP6, router advertisement',
             'description': 'RA messages received:',
+        },
+        # Throughput test for linux is not yet supported
+        # So next two entries are just placeholders
+        'dl_throughput': {
+            'id': 'dl_throughput',
+            'expressions': r'Nonexistent pattern placeholder: (\S+ \S+)',
+            'description': 'DL throughput:',
+        },
+        'ul_throughput': {
+            'id': 'ul_throughput',
+            'expressions': r'Nonexistent pattern placeholder: (\S+ \S+)',
+            'description': 'UL throughput:',
         },
         'ssid': {
             'id': 'ssid',
@@ -717,6 +743,47 @@ def execute_test(test, subfolder_name='.'):
     return test_results
 
 
+def measure_throughput(subfolder_name='.'):
+    command_to_execute = SETTINGS['throughput_command']
+    logging.info(f"Starting troughput measurement: {command_to_execute}")
+    if not command_to_execute:
+        logging.warning(f"Measuring throughput is not supported, no command to execute")
+        throughput_results = {
+            'command': command_to_execute,
+            'major_facts': "Measuring throughput is not supported"
+        }
+        return throughput_results
+
+    timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
+    filename = f"4_throughput_{timestamp}.txt"
+
+    print("Measuring throughput...")
+    _, task_output = run_subprocess(command_to_execute)
+
+    expressions = [
+        r'Upload capacity: .+',
+        r'Download capacity: .+',
+        r'Responsiveness: .+',
+    ]
+
+    with open(f'{subfolder_name}/{filename}', 'w', encoding='utf-8') as file:
+        file.write(f"Executed command: {command_to_execute}\n")
+        for line in task_output:
+            file.write(line)
+
+    search_results = []
+    for expression in expressions:
+        search_results.extend(re.findall(expression, task_output))
+    search_results = ('\n'.join(search_results))
+
+    throughput_results = {
+        'command': command_to_execute,
+        'major_facts': search_results
+    }
+
+    return throughput_results
+
+
 def parse_report(start_time, report, subfolder_name='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename_summary = f"0_summary_{timestamp}.txt"
@@ -747,6 +814,10 @@ def parse_report(start_time, report, subfolder_name='.'):
     summary.append("\n\n====Tcpdump====\n")
     summary.append(f"Filter: {SETTINGS['tcpdump_output_filter']}\n")
     summary.append(report['tcpdump']['result'])
+
+    if report['throughput']['major_facts']:
+        summary.append("\n\n====Throughput====\n")
+        summary.append(report['throughput']['major_facts'])
 
     # Prepare highlights from the summary
     for _, value in HIGHLIGHTS_TEMPLATE.items():
@@ -838,6 +909,22 @@ def gather_highlights(data, template):
             highlights = (f"RA messages received: {output}")
         else:
             highlights = ("! No RA messages captured")
+    elif template['id'] == 'dl_throughput':
+        if not SETTINGS['throughput_command']:
+            highlights = ""
+        elif search_results:
+            output = ' '.join(search_results)
+            highlights = (f"{template['description']} {output}")
+        else:
+            highlights = ("! DL troughput: error or not supported")
+    elif template['id'] == 'ul_throughput':
+        if not SETTINGS['throughput_command']:
+            highlights = ""
+        elif search_results:
+            output = ' '.join(search_results)
+            highlights = (f"{template['description']} {output}")
+        else:
+            highlights = ("! UL troughput: error or not supported")
     elif template['id'] == 'ssid':
         output = ' '.join(search_results)
         # Start from new line for better readability
@@ -1196,7 +1283,7 @@ def read_config():
 
 
 def main():
-    report = {'conflicts': {}, 'diags': {}, 'tests': {}, 'tcpdump': ''}
+    report = {'conflicts': {}, 'diags': {}, 'tests': {}, 'tcpdump': '', 'throughput': ''}
     start_time = datetime.now()
 
     # Create folders, start logs, check capabilities, look for conflicts
@@ -1216,6 +1303,9 @@ def main():
 
     # Terminate the tcpdump and parse the output .pcap file to form a report
     report['tcpdump'] = tcpdump_finish(dump, tcpdump_filename, start_time, conflicts)
+
+    # Try to measure throughput if OS has a right tool
+    report['throughput'] = measure_throughput(subfolder_name)
 
     # Save the <report> as .json file
     make_json(report, subfolder_name)

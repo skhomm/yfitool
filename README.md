@@ -117,7 +117,8 @@ Available 'tasks': 'ping ping6 traceroute traceroute6 curl curl6 route route6'
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Add some kind of a speedtest (networkQuality for macOS)
+- [x] Add throughput test for macOS
+- [ ] Add throughput test for Linux
 - [ ] Improve score calculation (now it's too straightforward)
 - [ ] Improve Linux support
 - [ ] Security audit
