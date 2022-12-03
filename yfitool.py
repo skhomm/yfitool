@@ -745,7 +745,9 @@ def execute_test(test, subfolder_name='.'):
 
 def measure_throughput(subfolder_name='.'):
     command_to_execute = SETTINGS['throughput_command']
+    logging.info(f"Starting troughput measurement: {command_to_execute}")
     if not command_to_execute:
+        logging.warning(f"Measuring throughput is not supported, no command to execute")
         print("Measuring throughput is not supported")
         throughput_results = {
             'command': command_to_execute,
@@ -755,7 +757,6 @@ def measure_throughput(subfolder_name='.'):
 
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename = f"4_throughput_{timestamp}.txt"
-
 
     print("Measuring throughput...")
     _, task_output = run_subprocess(command_to_execute)
@@ -909,6 +910,18 @@ def gather_highlights(data, template):
             highlights = (f"RA messages received: {output}")
         else:
             highlights = ("! No RA messages captured")
+    elif template['id'] == 'dl_throughput':
+        if search_results:
+            output = ' '.join(search_results)
+            highlights = (f"{template['description']} {output}")
+        else:
+            highlights = ("! DL troughput: error or not supported")
+    elif template['id'] == 'ul_throughput':
+        if search_results:
+            output = ' '.join(search_results)
+            highlights = (f"{template['description']} {output}")
+        else:
+            highlights = ("! UL troughput: error or not supported")
     elif template['id'] == 'ssid':
         output = ' '.join(search_results)
         # Start from new line for better readability
