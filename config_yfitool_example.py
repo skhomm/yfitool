@@ -427,12 +427,12 @@ def set_constants(adapter_name):
         # So next two entries are just placeholders
         'dl_throughput': {
             'id': 'dl_throughput',
-            'expressions': r'Non existing pattern placeholder: (\S+ \S+)',
+            'expressions': r'Nonexistent pattern placeholder: (\S+ \S+)',
             'description': 'DL throughput:',
         },
         'ul_throughput': {
             'id': 'ul_throughput',
-            'expressions': r'Non existing pattern placeholder: (\S+ \S+)',
+            'expressions': r'Nonexistent pattern placeholder: (\S+ \S+)',
             'description': 'UL throughput:',
         },
         'ssid': {
