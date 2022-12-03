@@ -116,6 +116,8 @@ def set_constants(adapter_name):
         'tcpdump_check_capabilities': f'tcpdump -i {adapter_name} -c 1',
         'tcpdump_timeout': 30,
         'tcpdump_output_filter': 'icmp6 && ip6[40] == 134',
+
+        'throughput_command': 'networkQuality',
     }
 
     settings['linux'] = {
@@ -136,6 +138,8 @@ def set_constants(adapter_name):
         'tcpdump_check_capabilities': f'tcpdump -i {adapter_name} -c 1',
         'tcpdump_timeout': 30,
         'tcpdump_output_filter': 'icmp6 && ip6[40] == 134',
+
+        'throughput_command': None, # Not supported yet
     }
 
     # DIAGNOSTICS are constants used by get_diagnostics() function
@@ -454,6 +458,18 @@ def set_constants(adapter_name):
             'expressions': r'ip6-allnodes: ICMP6, router advertisement',
             'description': 'RA messages received:',
         },
+        # Throughput test for linux is not yet supported
+        # So next two entries are just placeholders
+        'dl_throughput': {
+            'id': 'dl_throughput',
+            'expressions': r'Non existing pattern placeholder: (\S+ \S+)',
+            'description': 'DL throughput:',
+        },
+        'ul_throughput': {
+            'id': 'ul_throughput',
+            'expressions': r'Non existing pattern placeholder: (\S+ \S+)',
+            'description': 'UL throughput:',
+        },
         'ssid': {
             'id': 'ssid',
             'expressions': r'ssid (\S+)',
@@ -728,9 +744,18 @@ def execute_test(test, subfolder_name='.'):
 
 
 def measure_throughput(subfolder_name='.'):
+    command_to_execute = SETTINGS['throughput_command']
+    if not command_to_execute:
+        print("Measuring throughput is not supported")
+        throughput_results = {
+            'command': command_to_execute,
+            'major_facts': "Measuring throughput is not supported"
+        }
+        return throughput_results
+
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename = f"4_throughput_{timestamp}.txt"
-    command_to_execute = 'networkQuality'
+
 
     print("Measuring throughput...")
     _, task_output = run_subprocess(command_to_execute)

@@ -81,6 +81,8 @@ def set_constants(adapter_name):
         'tcpdump_check_capabilities': f'tcpdump -i {adapter_name} -c 1',
         'tcpdump_timeout': 30,
         'tcpdump_output_filter': 'icmp6 && ip6[40] == 134',
+
+        'throughput_command': 'networkQuality',
     }
 
     settings['linux'] = {
@@ -101,6 +103,8 @@ def set_constants(adapter_name):
         'tcpdump_check_capabilities': f'tcpdump -i {adapter_name} -c 1',
         'tcpdump_timeout': 30,
         'tcpdump_output_filter': 'icmp6 && ip6[40] == 134',
+
+        'throughput_command': None, # Not supported yet
     }
 
     # DIAGNOSTICS are constants used by get_diagnostics() function
@@ -418,6 +422,18 @@ def set_constants(adapter_name):
             'id': 'ra_received',
             'expressions': r'ip6-allnodes: ICMP6, router advertisement',
             'description': 'RA messages received:',
+        },
+        # Throughput test for linux is not yet supported
+        # So next two entries are just placeholders
+        'dl_throughput': {
+            'id': 'dl_throughput',
+            'expressions': r'Non existing pattern placeholder: (\S+ \S+)',
+            'description': 'DL throughput:',
+        },
+        'ul_throughput': {
+            'id': 'ul_throughput',
+            'expressions': r'Non existing pattern placeholder: (\S+ \S+)',
+            'description': 'UL throughput:',
         },
         'ssid': {
             'id': 'ssid',
