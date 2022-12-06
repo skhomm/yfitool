@@ -31,7 +31,7 @@ from sys import argv
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.5.2"
+VERSION = "1.5.3"
 FOLDER_NAME = '/var/tmp/yfi_reports'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
 
@@ -1327,6 +1327,7 @@ def main():
     execution_time = (end_time - start_time).seconds
     print(f"Completed in {execution_time} seconds")
     print(f"Full logs saved to {subfolder_name}")
+    logging.info(f"Completed in {execution_time} seconds")
 
     return report, human_friendly_report
 
