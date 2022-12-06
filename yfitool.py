@@ -36,6 +36,7 @@ FOLDER_NAME = '/var/tmp/yfi_reports'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
 
 SUBPROCESS_TIMEOUT = 30
+THROUGHPUT_TEST_TIMEOUT = 60
 MAX_WORKERS = 5 # Number of threads to run simultaneously
 
 # Here comes a long block of configuration constants assignment
@@ -758,7 +759,7 @@ def measure_throughput(subfolder_name='.'):
     filename = f"4_throughput_{timestamp}.txt"
 
     print("Measuring throughput...")
-    _, task_output = run_subprocess(command_to_execute)
+    _, task_output = run_subprocess(command_to_execute, THROUGHPUT_TEST_TIMEOUT)
 
     expressions = [
         r'Upload capacity: .+',
