@@ -762,8 +762,8 @@ def measure_throughput(subfolder_name='.'):
     _, task_output = run_subprocess(command_to_execute, THROUGHPUT_TEST_TIMEOUT)
 
     expressions = [
-        r'Upload capacity: .+',
-        r'Download capacity: .+',
+        r'Up.+ capacity: .+',
+        r'Down.+ capacity: .+',
         r'Responsiveness: .+',
     ]
 
