@@ -7,7 +7,6 @@ Try your best to apply changes only to external files
 and not modify the main script.
 """
 
-
 ### START OF CONFIGURATION CONSTANTS ASSIGNMENT ###
 
 def set_constants(adapter_name):
@@ -331,12 +330,12 @@ def set_constants(adapter_name):
         },
         'dl_throughput': {
             'id': 'dl_throughput',
-            'expressions': r'Download capacity: (\S+ \S+)',
+            'expressions': r'Down.+ capacity: (\S+ \S+)',
             'description': 'DL throughput:',
         },
         'ul_throughput': {
             'id': 'ul_throughput',
-            'expressions': r'Upload capacity: (\S+ \S+)',
+            'expressions': r'Up.+ capacity: (\S+ \S+)',
             'description': 'UL throughput:',
         },
         'ssid': {

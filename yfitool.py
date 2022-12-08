@@ -31,7 +31,7 @@ from sys import argv
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.5.3"
+VERSION = "1.5.4"
 FOLDER_NAME = '/var/tmp/yfi_reports'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
 
@@ -367,12 +367,12 @@ def set_constants(adapter_name):
         },
         'dl_throughput': {
             'id': 'dl_throughput',
-            'expressions': r'Download capacity: (\S+ \S+)',
+            'expressions': r'Down.+ capacity: (\S+ \S+)',
             'description': 'DL throughput:',
         },
         'ul_throughput': {
             'id': 'ul_throughput',
-            'expressions': r'Upload capacity: (\S+ \S+)',
+            'expressions': r'Up.+ capacity: (\S+ \S+)',
             'description': 'UL throughput:',
         },
         'ssid': {
