@@ -181,7 +181,7 @@ def set_constants(adapter_name):
             'command': f'networksetup -listpreferredwirelessnetworks {adapter_name}',
             'filename': 'known_networks',
             'expressions': [
-                r'	(\S+)',
+                r'	(.+)',
             ]
         },
         'wdutil': {
@@ -252,7 +252,7 @@ def set_constants(adapter_name):
             'command': 'iw dev',
             'filename': 'iw_dev',
             'expressions': [
-                r'ssid \S+',
+                r'ssid .+',
                 r'channel .+',
             ]
         },
@@ -340,7 +340,7 @@ def set_constants(adapter_name):
         },
         'ssid': {
             'id': 'ssid',
-            'expressions': r' SSID: (\S+)',
+            'expressions': r' SSID: (.+)',
             'description': 'SSID:',
         },
         # # You need sudo to get BSSID value from airport
@@ -436,7 +436,7 @@ def set_constants(adapter_name):
         },
         'ssid': {
             'id': 'ssid',
-            'expressions': r'ssid (\S+)',
+            'expressions': r'ssid (.+)',
             'description': 'SSID:',
         },
         'bssid': {
