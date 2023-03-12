@@ -685,13 +685,13 @@ def run_subprocess(command_to_execute, subprocess_timeout=SUBPROCESS_TIMEOUT):
     return test_result, test_output
 
 
-def get_diagnostics(task, subfolder_name='.'):
+def get_diagnostics(task, subfolder_path='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename = f"2_diag_{task['filename']}_{timestamp}.txt"
     command_to_execute = task['command']
     _, task_output = run_subprocess(command_to_execute)
 
-    with open(f'{subfolder_name}/{DIAGS_FOLDER}/{filename}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{DIAGS_FOLDER}/{filename}', 'w', encoding='utf-8') as file:
         file.write(f"Executed command: {command_to_execute}\n\n")
         for line in task_output:
             file.write(line)
@@ -709,7 +709,7 @@ def get_diagnostics(task, subfolder_name='.'):
     return diagnostic_results
 
 
-def execute_test(test, subfolder_name='.'):
+def execute_test(test, subfolder_path='.'):
     test_results = {}
 
     for task in test['tasks'].split():
@@ -733,7 +733,7 @@ def execute_test(test, subfolder_name='.'):
             executed_command, command_result, command_output = test_get_route(
                 task, test['target'])
 
-        with open(f"{subfolder_name}/{TESTS_FOLDER}/{filename}", 'w', encoding='utf-8') as file:
+        with open(f"{subfolder_path}/{TESTS_FOLDER}/{filename}", 'w', encoding='utf-8') as file:
             file.write(f"Executed command: {executed_command}\n\n")
             for line in command_output:
                 file.write(line)
@@ -746,7 +746,7 @@ def execute_test(test, subfolder_name='.'):
     return test_results
 
 
-def measure_throughput(subfolder_name='.'):
+def measure_throughput(subfolder_path='.'):
     command_to_execute = SETTINGS['throughput_command']
     logging.info(f"Starting troughput measurement: {command_to_execute}")
     if not command_to_execute:
@@ -769,7 +769,7 @@ def measure_throughput(subfolder_name='.'):
         r'Responsiveness: .+',
     ]
 
-    with open(f'{subfolder_name}/{filename}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{filename}', 'w', encoding='utf-8') as file:
         file.write(f"Executed command: {command_to_execute}\n")
         for line in task_output:
             file.write(line)
@@ -787,7 +787,7 @@ def measure_throughput(subfolder_name='.'):
     return throughput_results
 
 
-def parse_report(start_time, report, subfolder_name='.'):
+def parse_report(start_time, report, subfolder_path='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename_summary = f"0_summary_{timestamp}.txt"
     script_name = f"Yet Another Wi-Fi Diagnostic Tool v{VERSION}\n"
@@ -842,7 +842,7 @@ def parse_report(start_time, report, subfolder_name='.'):
     human_friendly_report = "".join(final_report)
     highlights_to_print = "".join(highlights_from_summary)
 
-    with open(f'{subfolder_name}/{filename_summary}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{filename_summary}', 'w', encoding='utf-8') as file:
         for line in final_report:
             file.write(line)
 
@@ -943,14 +943,14 @@ def gather_highlights(data, template):
     return highlights
 
 
-def make_json(report, subfolder_name='.'):
+def make_json(report, subfolder_path='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename_json = f"1_report_{timestamp}.json"
-    with open(f'{subfolder_name}/{filename_json}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{filename_json}', 'w', encoding='utf-8') as file:
         json.dump(report, file)
 
 
-def markdownify_report(report, parsed_report, subfolder_name='.'):
+def markdownify_report(report, parsed_report, subfolder_path='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename_wiki = f"1_markdown_{timestamp}.md"
     diagnostics = []
@@ -977,7 +977,7 @@ def markdownify_report(report, parsed_report, subfolder_name='.'):
     tcpdump_output.append('\n')
     tcpdump_output.append(report['tcpdump']['result'])
 
-    with open(f'{subfolder_name}/{filename_wiki}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{filename_wiki}', 'w', encoding='utf-8') as file:
 
         file.write(f"#### Yet Another Wi-Fi Diagnostic Tool v{VERSION}\n")
         file.write("```")
@@ -1003,13 +1003,13 @@ def markdownify_report(report, parsed_report, subfolder_name='.'):
         file.write("\n</details>")
 
 
-def run_simultaneous_collection(dataset, subfolder_name='.'):
+def run_simultaneous_collection(dataset, subfolder_path='.'):
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
         if dataset == DIAGNOSTICS:
-            future_list = [ex.submit(get_diagnostics, dataset[data], subfolder_name)
+            future_list = [ex.submit(get_diagnostics, dataset[data], subfolder_path)
                            for data in dataset]
         elif dataset == TESTS:
-            future_list = [ex.submit(execute_test, dataset[data], subfolder_name)
+            future_list = [ex.submit(execute_test, dataset[data], subfolder_path)
                            for data in dataset]
 
         # Make a new dictionary out of dataset keys and future collection results
@@ -1113,21 +1113,21 @@ def initialize_system(start_time):
         diag_name = (f"{username}_basic_wifi_diag_{timestamp}")
 
     # Each time we run the script, create a timestamped subfolder inside the <FOLDER_NAME>
-    subfolder_name = (f"{FOLDER_NAME}/{diag_name}")
+    subfolder_path = (f"{FOLDER_NAME}/{diag_name}")
     subprocess.run(f"mkdir {FOLDER_NAME}".split(), stderr=subprocess.DEVNULL, check=False)
     try:
-        subprocess.run(f"mkdir {subfolder_name}".split(), check=True)
-        subprocess.run(f"mkdir {subfolder_name}/{DIAGS_FOLDER}".split(), check=True)
-        subprocess.run(f"mkdir {subfolder_name}/{TESTS_FOLDER}".split(), check=True)
+        subprocess.run(f"mkdir {subfolder_path}".split(), check=True)
+        subprocess.run(f"mkdir {subfolder_path}/{DIAGS_FOLDER}".split(), check=True)
+        subprocess.run(f"mkdir {subfolder_path}/{TESTS_FOLDER}".split(), check=True)
     except subprocess.CalledProcessError:
-        print(f"Error while creating {subfolder_name} folder structure")
-        logging.info(f"Error while creating {subfolder_name} folder structure")
+        print(f"Error while creating {subfolder_path} folder structure")
+        logging.info(f"Error while creating {subfolder_path} folder structure")
         exit()
 
     # Add logging to the file in the created subfolder
     logging.basicConfig(
         format='%(asctime)s %(name)s %(levelname)s %(message)s',
-        filename=f"{subfolder_name}/1_logs_{timestamp}.log",
+        filename=f"{subfolder_path}/1_logs_{timestamp}.log",
         level=logging.INFO
     )
     logging.info(f"Yet Another Wi-Fi Diagnostic Tool v{VERSION} started by {started_by}")
@@ -1145,13 +1145,13 @@ def initialize_system(start_time):
 
     print("---")
     print(f"\nYet Another Wi-Fi Diagnostic Tool v{VERSION}")
-    print(f"Results will be saved to {subfolder_name}")
+    print(f"Results will be saved to {subfolder_path}")
 
-    return timestamp, diag_name, subfolder_name, conflicts
+    return timestamp, diag_name, subfolder_path, conflicts
 
 
-def tcpdump_start(subfolder_name, timestamp, conflicts):
-    tcpdump_filename = f'{subfolder_name}/dump_{timestamp}.pcap'
+def tcpdump_start(subfolder_path, timestamp, conflicts):
+    tcpdump_filename = f'{subfolder_path}/dump_{timestamp}.pcap'
     # Run tcpdump only in case no conflicts found at check_compatibility() stage
     if True in conflicts['check_tcpdump'].values():
         dump = None
@@ -1299,37 +1299,37 @@ def main():
     start_time = datetime.now()
 
     # Create folders, start logs, check capabilities, look for conflicts
-    timestamp, diag_name, subfolder_name, conflicts = initialize_system(start_time)
+    timestamp, diag_name, subfolder_path, conflicts = initialize_system(start_time)
     report['conflicts'] = conflicts
 
     # Start the tcpdump in background; will terminate after all other jobs finished
-    dump, tcpdump_filename = tcpdump_start(subfolder_name, timestamp, conflicts)
+    dump, tcpdump_filename = tcpdump_start(subfolder_path, timestamp, conflicts)
 
     # Collect diagnostics with accordance to the DIAGNOSTICS template
     print("\nCollecting diagnostics...")
-    report['diags'] = run_simultaneous_collection(DIAGNOSTICS, subfolder_name)
+    report['diags'] = run_simultaneous_collection(DIAGNOSTICS, subfolder_path)
 
     # Perform tests with accordance to the TESTS template
     print("Performing tests...")
-    report['tests'] = run_simultaneous_collection(TESTS, subfolder_name)
+    report['tests'] = run_simultaneous_collection(TESTS, subfolder_path)
 
     # Terminate the tcpdump and parse the output .pcap file to form a report
     report['tcpdump'] = tcpdump_finish(dump, tcpdump_filename, start_time, conflicts)
 
     # Try to measure throughput if OS has a right tool
-    report['throughput'] = measure_throughput(subfolder_name)
+    report['throughput'] = measure_throughput(subfolder_path)
 
     # Save the <report> as .json file
-    make_json(report, subfolder_name)
+    make_json(report, subfolder_path)
 
     # Parse the <report> to return a human-readable summary, save it to a file
     # Print the most important highlights
-    parsed_report = parse_report(start_time, report, subfolder_name)
+    parsed_report = parse_report(start_time, report, subfolder_path)
     print(parsed_report['highlights_to_print'])
     human_friendly_report = parsed_report['human_friendly_report']
 
     # Generate a markdown-syntax report and save it to a file
-    markdownify_report(report, parsed_report, subfolder_name)
+    markdownify_report(report, parsed_report, subfolder_path)
 
     # Gather all files into one archive, so that it's easy to share
     make_archive(diag_name)
@@ -1337,7 +1337,7 @@ def main():
     end_time = datetime.now()
     execution_time = (end_time - start_time).seconds
     print(f"Completed in {execution_time} seconds")
-    print(f"Full logs saved to {subfolder_name}")
+    print(f"Full logs saved to {subfolder_path}")
     logging.info(f"Completed in {execution_time} seconds")
 
     return report, human_friendly_report
