@@ -1337,7 +1337,8 @@ def main():
     end_time = datetime.now()
     execution_time = (end_time - start_time).seconds
     print(f"Completed in {execution_time} seconds")
-    print(f"Full logs saved to {subfolder_path}")
+    print(f"The report has been saved to {subfolder_path}")
+    print("\nIt could contain sensitive data, so do not share it with someone you don't trust")
     logging.info(f"Completed in {execution_time} seconds")
 
     return report, human_friendly_report
