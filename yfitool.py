@@ -31,7 +31,7 @@ from sys import argv
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.5.6"
+VERSION = "1.5.7"
 FOLDER_NAME = '/var/tmp/yfi_reports'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
 
@@ -87,7 +87,7 @@ def set_constants(adapter_name):
         },
         'the_wlpc': {
             'target': 'thewlpc.com',
-            'tasks': 'ping ping6 curl traceroute',
+            'tasks': 'ping curl traceroute',
             'filename': 'wlpc'
         },
         # 'gateway' is treated in a special way, check test_ping()
@@ -100,7 +100,7 @@ def set_constants(adapter_name):
 
     # General settings
     settings['darwin'] = {
-        'ping_arguments': '-c 20',
+        'ping_arguments': '--apple-time -c 20',
         'good_ping_pattern': ' 0.0% packet loss',
         'traceroute_arguments': '-I',
         'route_get_ipv4_command': 'route -vn get',

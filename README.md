@@ -119,6 +119,7 @@ Available 'tasks': 'ping ping6 traceroute traceroute6 curl curl6 route route6'
 
 - [x] Add throughput test for macOS
 - [ ] Add throughput test for Linux
+- [ ] Add an option to disable IPv6 tests
 - [ ] Improve score calculation (now it's too straightforward)
 - [ ] Improve Linux support
 - [ ] Security audit
