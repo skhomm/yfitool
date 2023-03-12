@@ -31,8 +31,10 @@ from sys import argv
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.5.7"
+VERSION = "1.6.0"
 FOLDER_NAME = '/var/tmp/yfi_reports'
+DIAGS_FOLDER = '2_diags'
+TESTS_FOLDER = '3_tests'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
 
 SUBPROCESS_TIMEOUT = 30
@@ -689,7 +691,7 @@ def get_diagnostics(task, subfolder_name='.'):
     command_to_execute = task['command']
     _, task_output = run_subprocess(command_to_execute)
 
-    with open(f'{subfolder_name}/{filename}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_name}/{DIAGS_FOLDER}/{filename}', 'w', encoding='utf-8') as file:
         file.write(f"Executed command: {command_to_execute}\n\n")
         for line in task_output:
             file.write(line)
@@ -731,7 +733,7 @@ def execute_test(test, subfolder_name='.'):
             executed_command, command_result, command_output = test_get_route(
                 task, test['target'])
 
-        with open(f"{subfolder_name}/{filename}", 'w', encoding='utf-8') as file:
+        with open(f"{subfolder_name}/{TESTS_FOLDER}/{filename}", 'w', encoding='utf-8') as file:
             file.write(f"Executed command: {executed_command}\n\n")
             for line in command_output:
                 file.write(line)
@@ -1018,14 +1020,15 @@ def run_simultaneous_collection(dataset, subfolder_name='.'):
     return collection_report
 
 
-def make_archive(diag_name, subfolder_name='.'):
+def make_archive(diag_name):
     # Add folder contents to archive so that it's easy to share
     archive_name = f'0_archive_{diag_name}.zip'
     try:
-        zip_command = f'zip -rj {subfolder_name}/{archive_name} {subfolder_name}'
+        zip_command = f'zip -r {diag_name}/{archive_name} {diag_name}'
         logging.info(f"Create archive: {zip_command}")
         subprocess.run(
             zip_command.split(),
+            cwd=FOLDER_NAME,
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             check=True
@@ -1114,8 +1117,11 @@ def initialize_system(start_time):
     subprocess.run(f"mkdir {FOLDER_NAME}".split(), stderr=subprocess.DEVNULL, check=False)
     try:
         subprocess.run(f"mkdir {subfolder_name}".split(), check=True)
+        subprocess.run(f"mkdir {subfolder_name}/{DIAGS_FOLDER}".split(), check=True)
+        subprocess.run(f"mkdir {subfolder_name}/{TESTS_FOLDER}".split(), check=True)
     except subprocess.CalledProcessError:
-        print(f"Error while creating {subfolder_name}")
+        print(f"Error while creating {subfolder_name} folder structure")
+        logging.info(f"Error while creating {subfolder_name} folder structure")
         exit()
 
     # Add logging to the file in the created subfolder
@@ -1326,7 +1332,7 @@ def main():
     markdownify_report(report, parsed_report, subfolder_name)
 
     # Gather all files into one archive, so that it's easy to share
-    make_archive(diag_name, subfolder_name)
+    make_archive(diag_name)
 
     end_time = datetime.now()
     execution_time = (end_time - start_time).seconds
