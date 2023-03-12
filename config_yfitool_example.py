@@ -50,7 +50,7 @@ def set_constants(adapter_name):
         },
         'the_wlpc': {
             'target': 'thewlpc.com',
-            'tasks': 'ping ping6 curl traceroute',
+            'tasks': 'ping curl traceroute',
             'filename': 'wlpc'
         },
         # 'gateway' is treated in a special way, check test_ping()
@@ -63,7 +63,7 @@ def set_constants(adapter_name):
 
     # General settings
     settings['darwin'] = {
-        'ping_arguments': '-c 20',
+        'ping_arguments': '--apple-time -c 20',
         'good_ping_pattern': ' 0.0% packet loss',
         'traceroute_arguments': '-I',
         'route_get_ipv4_command': 'route -vn get',
