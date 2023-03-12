@@ -51,8 +51,8 @@ The tool will run for a minute or two. It will generate report in `/var/tmp/yfi_
 - 1_logs_timestamp.log
 - 1_markdown_timestamp.md
 - 1_report_timestamp.json
-- 2_diag_*.txt
-- 3_test_*.txt
+- 2_diags/2_diag_*.txt
+- 3_tests/3_test_*.txt
 - dump_timestamp.pcap
 
 `0_archive_username_timestamp.zip` is just the same folder with all collected files compressed for your convenience. Just send it to your system administrator if you don't care. 
