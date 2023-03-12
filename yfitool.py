@@ -31,7 +31,7 @@ from sys import argv
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.5.5"
+VERSION = "1.5.6"
 FOLDER_NAME = '/var/tmp/yfi_reports'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
 
@@ -1253,6 +1253,10 @@ def get_adapter_name(os_type):
 
 
 def read_config():
+    # The purpose of read_config() is to set some config CONSTANTS
+    # that will be accessible globally and will not be changed
+    global FACTS, TESTS, SETTINGS, DIAGNOSTICS, HIGHLIGHTS_TEMPLATE, EXTERNAL_CONFIG
+
     os_type = subprocess.check_output("uname", encoding='utf-8').strip().lower()
     adapter_name = get_adapter_name(os_type)
 
@@ -1266,24 +1270,25 @@ def read_config():
     try:
         ext = importlib.import_module(external_config_file, package=None)
         constants = ext.set_constants(adapter_name)
-        external_config = True
+        EXTERNAL_CONFIG = True
 
     # If there is no external configuration file - use built-in config
     except ModuleNotFoundError:
         print("No external configuration provided, using built-in defaults")
-        external_config = False
+        EXTERNAL_CONFIG = False
         constants = set_constants(adapter_name)
 
-    facts = constants['facts']['universal']
-    tests = constants['tests']['universal']
-    settings = constants['settings'][os_type]
-    diagnostics = constants['diagnostics'][os_type]
-    highlights_template = constants['highlights_template'][os_type]
-
-    return facts, tests, settings, diagnostics, highlights_template, external_config
+    FACTS = constants['facts']['universal']
+    TESTS = constants['tests']['universal']
+    SETTINGS = constants['settings'][os_type]
+    DIAGNOSTICS = constants['diagnostics'][os_type]
+    HIGHLIGHTS_TEMPLATE = constants['highlights_template'][os_type]
 
 
 def main():
+    # Read config to assign FACTS, TESTS, SETTINGS, DIAGNOSTICS and HIGHLIGHTS_TEMPLATES
+    read_config()
+
     report = {'conflicts': {}, 'diags': {}, 'tests': {}, 'tcpdump': '', 'throughput': ''}
     start_time = datetime.now()
 
@@ -1333,5 +1338,4 @@ def main():
 
 
 if __name__ == '__main__':
-    FACTS, TESTS, SETTINGS, DIAGNOSTICS, HIGHLIGHTS_TEMPLATE, EXTERNAL_CONFIG = read_config()
     main()
