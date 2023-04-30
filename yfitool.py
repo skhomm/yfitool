@@ -1112,16 +1112,10 @@ def initialize_system(start_time):
         diag_name = (f"{hostname}_wifi_diag_{timestamp}")
     else:
         diag_name = (f"{hostname}_basic_wifi_diag_{timestamp}")
+
     # Create a folder to store all gathered diagnostics
     subfolder_path = (f"{FOLDER_NAME}/{diag_name}")
     subprocess.run(f"mkdir {FOLDER_NAME}".split(), stderr=subprocess.DEVNULL, check=False)
-    # Make sure that <username> owns the folder even if the script started as root
-    if username != started_by:
-        try:
-            logging.info(f"Ensuring the correct ownership of {FOLDER_NAME}")
-            subprocess.run(f"chown {username} {FOLDER_NAME}".split(), check=True)
-        except subprocess.CalledProcessError:
-            logging.exception('')
     # Each time we run the script, create a timestamped subfolder inside the <FOLDER_NAME>
     try:
         subprocess.run(f"mkdir {subfolder_path}".split(), check=True)
@@ -1129,7 +1123,6 @@ def initialize_system(start_time):
         subprocess.run(f"mkdir {subfolder_path}/{TESTS_FOLDER}".split(), check=True)
     except subprocess.CalledProcessError:
         print(f"Error while creating {subfolder_path} folder structure")
-        logging.info(f"Error while creating {subfolder_path} folder structure")
         exit()
 
     # Add logging to the file in the created subfolder
@@ -1139,6 +1132,14 @@ def initialize_system(start_time):
         level=logging.INFO
     )
     logging.info(f"Yet Another Wi-Fi Diagnostic Tool v{VERSION} started by {started_by}")
+
+    # Make sure that <username> owns the folder even if the script started as root
+    if username != started_by:
+        try:
+            logging.info(f"Ensuring the correct ownership of {FOLDER_NAME}")
+            subprocess.run(f"chown {username} {FOLDER_NAME}".split(), check=True)
+        except subprocess.CalledProcessError:
+            logging.exception('')
 
     # Check if the script is fully compilant with the system
     os_type = subprocess.check_output("uname", encoding='utf-8').strip().lower()
