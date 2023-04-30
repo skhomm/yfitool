@@ -1125,6 +1125,7 @@ def initialize_system(start_time):
         subprocess.run(f"mkdir {subfolder_path}/{TESTS_FOLDER}".split(), check=True)
     except subprocess.CalledProcessError:
         print(f"Error while creating {subfolder_path} folder structure")
+        print(f"Check permissions for {FOLDER_NAME}")
         exit()
 
     # Add logging to the file in the created subfolder
