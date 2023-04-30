@@ -27,12 +27,13 @@ import logging
 import importlib
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from sys import argv
+from sys import argv,exit
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.6.0"
+VERSION = "1.6.1"
 FOLDER_NAME = '/var/tmp/yfi_reports'
+REPORTS_FOLDER = '1_reports'
 DIAGS_FOLDER = '2_diags'
 TESTS_FOLDER = '3_tests'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
@@ -758,7 +759,7 @@ def measure_throughput(subfolder_path='.'):
         return throughput_results
 
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
-    filename = f"4_throughput_{timestamp}.txt"
+    filename = f"3_throughput_{timestamp}.txt"
 
     print("Measuring throughput...")
     _, task_output = run_subprocess(command_to_execute, THROUGHPUT_TEST_TIMEOUT)
@@ -769,7 +770,7 @@ def measure_throughput(subfolder_path='.'):
         r'Responsiveness: .+',
     ]
 
-    with open(f'{subfolder_path}/{filename}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{TESTS_FOLDER}/{filename}', 'w', encoding='utf-8') as file:
         file.write(f"Executed command: {command_to_execute}\n")
         for line in task_output:
             file.write(line)
@@ -946,13 +947,13 @@ def gather_highlights(data, template):
 def make_json(report, subfolder_path='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename_json = f"1_report_{timestamp}.json"
-    with open(f'{subfolder_path}/{filename_json}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{REPORTS_FOLDER}/{filename_json}', 'w', encoding='utf-8') as file:
         json.dump(report, file)
 
 
 def markdownify_report(report, parsed_report, subfolder_path='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
-    filename_wiki = f"1_markdown_{timestamp}.md"
+    filename_md = f"1_markdown_{timestamp}.md"
     diagnostics = []
     tests = []
     tcpdump_output = []
@@ -977,7 +978,7 @@ def markdownify_report(report, parsed_report, subfolder_path='.'):
     tcpdump_output.append('\n')
     tcpdump_output.append(report['tcpdump']['result'])
 
-    with open(f'{subfolder_path}/{filename_wiki}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{REPORTS_FOLDER}/{filename_md}', 'w', encoding='utf-8') as file:
 
         file.write(f"#### Yet Another Wi-Fi Diagnostic Tool v{VERSION}\n")
         file.write("```")
@@ -1104,40 +1105,44 @@ def initialize_system(start_time):
     # If you start the script with sudo, <started_by> == 'root' != <username>
     started_by = subprocess.check_output("whoami", encoding='utf-8').strip()
     username = subprocess.check_output("logname", encoding='utf-8').strip()
+    hostname = subprocess.check_output("hostname", encoding='utf-8').strip()
 
     # Running the script without sudo will not gather all available diagnostics
     # So, lets mark all non-sudo attempts as "basic_wifi_diag"
     if started_by == "root":
-        diag_name = (f"{username}_wifi_diag_{timestamp}")
+        diag_name = (f"{hostname}_wifi_diag_{timestamp}")
     else:
-        diag_name = (f"{username}_basic_wifi_diag_{timestamp}")
+        diag_name = (f"{hostname}_basic_wifi_diag_{timestamp}")
 
-    # Each time we run the script, create a timestamped subfolder inside the <FOLDER_NAME>
+    # Create a folder to store all gathered diagnostics
     subfolder_path = (f"{FOLDER_NAME}/{diag_name}")
     subprocess.run(f"mkdir {FOLDER_NAME}".split(), stderr=subprocess.DEVNULL, check=False)
+    # Each time we run the script, create a timestamped subfolder inside the <FOLDER_NAME>
     try:
         subprocess.run(f"mkdir {subfolder_path}".split(), check=True)
+        subprocess.run(f"mkdir {subfolder_path}/{REPORTS_FOLDER}".split(), check=True)
         subprocess.run(f"mkdir {subfolder_path}/{DIAGS_FOLDER}".split(), check=True)
         subprocess.run(f"mkdir {subfolder_path}/{TESTS_FOLDER}".split(), check=True)
     except subprocess.CalledProcessError:
         print(f"Error while creating {subfolder_path} folder structure")
-        logging.info(f"Error while creating {subfolder_path} folder structure")
+        print(f"Check permissions for {FOLDER_NAME}")
         exit()
 
     # Add logging to the file in the created subfolder
     logging.basicConfig(
         format='%(asctime)s %(name)s %(levelname)s %(message)s',
-        filename=f"{subfolder_path}/1_logs_{timestamp}.log",
+        filename=f"{subfolder_path}/logs_{timestamp}.log",
         level=logging.INFO
     )
     logging.info(f"Yet Another Wi-Fi Diagnostic Tool v{VERSION} started by {started_by}")
 
     # Make sure that <username> owns the folder even if the script started as root
-    try:
-        logging.info(f"Ensuring the correct ownership of {FOLDER_NAME}")
-        subprocess.run(f"chown {username} {FOLDER_NAME}".split(), check=True)
-    except subprocess.CalledProcessError:
-        logging.exception('')
+    if username != started_by:
+        try:
+            logging.info(f"Ensuring the correct ownership of {FOLDER_NAME}")
+            subprocess.run(f"chown {username} {FOLDER_NAME}".split(), check=True)
+        except subprocess.CalledProcessError:
+            logging.exception('')
 
     # Check if the script is fully compilant with the system
     os_type = subprocess.check_output("uname", encoding='utf-8').strip().lower()
