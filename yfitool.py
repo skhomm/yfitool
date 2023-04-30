@@ -27,11 +27,11 @@ import logging
 import importlib
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
-from sys import argv
+from sys import argv,exit
 
 # Do not rename these constants - they are used for integration purposes
 
-VERSION = "1.6.0"
+VERSION = "1.6.1"
 FOLDER_NAME = '/var/tmp/yfi_reports'
 DIAGS_FOLDER = '2_diags'
 TESTS_FOLDER = '3_tests'
@@ -1104,17 +1104,25 @@ def initialize_system(start_time):
     # If you start the script with sudo, <started_by> == 'root' != <username>
     started_by = subprocess.check_output("whoami", encoding='utf-8').strip()
     username = subprocess.check_output("logname", encoding='utf-8').strip()
+    hostname = subprocess.check_output("hostname", encoding='utf-8').strip()
 
     # Running the script without sudo will not gather all available diagnostics
     # So, lets mark all non-sudo attempts as "basic_wifi_diag"
     if started_by == "root":
-        diag_name = (f"{username}_wifi_diag_{timestamp}")
+        diag_name = (f"{hostname}_wifi_diag_{timestamp}")
     else:
-        diag_name = (f"{username}_basic_wifi_diag_{timestamp}")
-
-    # Each time we run the script, create a timestamped subfolder inside the <FOLDER_NAME>
+        diag_name = (f"{hostname}_basic_wifi_diag_{timestamp}")
+    # Create a folder to store all gathered diagnostics
     subfolder_path = (f"{FOLDER_NAME}/{diag_name}")
     subprocess.run(f"mkdir {FOLDER_NAME}".split(), stderr=subprocess.DEVNULL, check=False)
+    # Make sure that <username> owns the folder even if the script started as root
+    if username != started_by:
+        try:
+            logging.info(f"Ensuring the correct ownership of {FOLDER_NAME}")
+            subprocess.run(f"chown {username} {FOLDER_NAME}".split(), check=True)
+        except subprocess.CalledProcessError:
+            logging.exception('')
+    # Each time we run the script, create a timestamped subfolder inside the <FOLDER_NAME>
     try:
         subprocess.run(f"mkdir {subfolder_path}".split(), check=True)
         subprocess.run(f"mkdir {subfolder_path}/{DIAGS_FOLDER}".split(), check=True)
@@ -1131,13 +1139,6 @@ def initialize_system(start_time):
         level=logging.INFO
     )
     logging.info(f"Yet Another Wi-Fi Diagnostic Tool v{VERSION} started by {started_by}")
-
-    # Make sure that <username> owns the folder even if the script started as root
-    try:
-        logging.info(f"Ensuring the correct ownership of {FOLDER_NAME}")
-        subprocess.run(f"chown {username} {FOLDER_NAME}".split(), check=True)
-    except subprocess.CalledProcessError:
-        logging.exception('')
 
     # Check if the script is fully compilant with the system
     os_type = subprocess.check_output("uname", encoding='utf-8').strip().lower()
