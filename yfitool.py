@@ -33,6 +33,7 @@ from sys import argv,exit
 
 VERSION = "1.6.1"
 FOLDER_NAME = '/var/tmp/yfi_reports'
+REPORTS_FOLDER = '1_reports'
 DIAGS_FOLDER = '2_diags'
 TESTS_FOLDER = '3_tests'
 DEFAULT_EXTERNAL_CONFIG_FILE = 'config_yfitool'
@@ -758,7 +759,7 @@ def measure_throughput(subfolder_path='.'):
         return throughput_results
 
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
-    filename = f"4_throughput_{timestamp}.txt"
+    filename = f"3_throughput_{timestamp}.txt"
 
     print("Measuring throughput...")
     _, task_output = run_subprocess(command_to_execute, THROUGHPUT_TEST_TIMEOUT)
@@ -769,7 +770,7 @@ def measure_throughput(subfolder_path='.'):
         r'Responsiveness: .+',
     ]
 
-    with open(f'{subfolder_path}/{filename}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{TESTS_FOLDER}/{filename}', 'w', encoding='utf-8') as file:
         file.write(f"Executed command: {command_to_execute}\n")
         for line in task_output:
             file.write(line)
@@ -946,13 +947,13 @@ def gather_highlights(data, template):
 def make_json(report, subfolder_path='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
     filename_json = f"1_report_{timestamp}.json"
-    with open(f'{subfolder_path}/{filename_json}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{REPORTS_FOLDER}/{filename_json}', 'w', encoding='utf-8') as file:
         json.dump(report, file)
 
 
 def markdownify_report(report, parsed_report, subfolder_path='.'):
     timestamp = datetime.now().strftime('%y%m%d_%H%M%S')
-    filename_wiki = f"1_markdown_{timestamp}.md"
+    filename_md = f"1_markdown_{timestamp}.md"
     diagnostics = []
     tests = []
     tcpdump_output = []
@@ -977,7 +978,7 @@ def markdownify_report(report, parsed_report, subfolder_path='.'):
     tcpdump_output.append('\n')
     tcpdump_output.append(report['tcpdump']['result'])
 
-    with open(f'{subfolder_path}/{filename_wiki}', 'w', encoding='utf-8') as file:
+    with open(f'{subfolder_path}/{REPORTS_FOLDER}/{filename_md}', 'w', encoding='utf-8') as file:
 
         file.write(f"#### Yet Another Wi-Fi Diagnostic Tool v{VERSION}\n")
         file.write("```")
@@ -1119,6 +1120,7 @@ def initialize_system(start_time):
     # Each time we run the script, create a timestamped subfolder inside the <FOLDER_NAME>
     try:
         subprocess.run(f"mkdir {subfolder_path}".split(), check=True)
+        subprocess.run(f"mkdir {subfolder_path}/{REPORTS_FOLDER}".split(), check=True)
         subprocess.run(f"mkdir {subfolder_path}/{DIAGS_FOLDER}".split(), check=True)
         subprocess.run(f"mkdir {subfolder_path}/{TESTS_FOLDER}".split(), check=True)
     except subprocess.CalledProcessError:
@@ -1128,7 +1130,7 @@ def initialize_system(start_time):
     # Add logging to the file in the created subfolder
     logging.basicConfig(
         format='%(asctime)s %(name)s %(levelname)s %(message)s',
-        filename=f"{subfolder_path}/1_logs_{timestamp}.log",
+        filename=f"{subfolder_path}/logs_{timestamp}.log",
         level=logging.INFO
     )
     logging.info(f"Yet Another Wi-Fi Diagnostic Tool v{VERSION} started by {started_by}")
